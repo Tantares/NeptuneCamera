@@ -327,7 +327,9 @@ namespace NeptuneCamera
 
                 // Write the file.
 
-                string fileName = string.Format(@"C:\output\image_{0}.png", Guid.NewGuid().ToString());
+                string path = KSPUtil.ApplicationRootPath + "Screenshots/neptune-image-{0}.png";
+
+                string fileName = string.Format(path,Guid.NewGuid().ToString());
 
                 File.WriteAllBytes(fileName, bytes);
             }
