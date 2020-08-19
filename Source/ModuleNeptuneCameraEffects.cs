@@ -132,7 +132,23 @@ namespace NeptuneCamera
 
                     if (randomErrorChance <= errorRate)
                     {
-                        inputTexture.SetPixel(x, y, (randomErrorChance % 2 == 0) ? Color.white : Color.black);
+                        var pixel = inputTexture.GetPixel(x, y);
+                        float newR = pixel.r * ((randomErrorChance % 2 == 0) ? 0.1f : 2.0f);
+                        float newG = pixel.r * ((randomErrorChance % 2 == 0) ? 0.1f : 2.0f);
+                        float newB = pixel.r * ((randomErrorChance % 2 == 0) ? 0.1f : 2.0f);
+
+                        newR = Math.Min(1.0f, newR);
+                        newG = Math.Min(1.0f, newG);
+                        newB = Math.Min(1.0f, newB);
+
+                        pixel.r = newR;
+                        pixel.g = newG;
+                        pixel.b = newB;
+
+                        inputTexture.SetPixel(x, y, pixel);
+
+                        // Old style error.
+                        //inputTexture.SetPixel(x, y, (randomErrorChance % 2 == 0) ? Color.white : Color.black);
                     }
                 }
             }

@@ -11,31 +11,31 @@ namespace NeptuneCamera
 {
     public class ModuleNeptuneCamera : PartModule
     {
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public string cameraTransformName = "cameraTransform";
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public string cameraType = CAMERA_TYPE_FULL_COLOUR;
 
         [KSPField(isPersistant = true)]
         public float cameraFieldOfView = 60;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public int cameraHorizontalResolution = 256;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public int cameraVerticalResolution = 256;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public bool cameraHasErrors = true;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public int cameraErrorRate = 1;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public bool cameraHasNoise = true;
 
-        [KSPField(isPersistant = true)]
+        [KSPField]
         public int cameraNoiseMaxStrength = 10;
 
         private GameObject _cameraGameObject = null;
@@ -321,6 +321,11 @@ namespace NeptuneCamera
 
                 Debug.LogFormat("[{0}] Applying effects to the image texture.", DEBUG_LOG_PREFIX);
 
+                // Apply error scrambling if enabled.
+
+                if (cameraHasErrors)
+                    imageTexture = ModuleNeptuneCameraEffects.GetErrorDamagedTexture(imageTexture, cameraErrorRate);
+
                 // Apply filtering based on capture type.
 
                 if (captureType == CAMERA_TYPE_RED_COLOUR)
@@ -346,11 +351,7 @@ namespace NeptuneCamera
                 if (cameraHasNoise)
                     imageTexture = ModuleNeptuneCameraEffects.GetNoisyTexture(imageTexture, cameraNoiseMaxStrength);
 
-                // Apply error scrambling if enabled.
-
-                if (cameraHasErrors)
-                    imageTexture = ModuleNeptuneCameraEffects.GetErrorDamagedTexture(imageTexture, cameraErrorRate);
-                
+               
                 Debug.LogFormat("[{0}] Encoding image texture to bytes.", DEBUG_LOG_PREFIX);
 
                 byte[] bytes = imageTexture.EncodeToPNG();
