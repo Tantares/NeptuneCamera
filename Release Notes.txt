@@ -1,6 +1,10 @@
 Neptune Camera
-Version 1.0
+Version 2.0
 
-Initial release, place the NeptuneCamera folder into KSP/GameData to use.
+- Ultraviolet camera mode (protanopia).
+- Infrared camera mode (tritanopia).
+- configurable camera grain.
+
+place the NeptuneCamera folder into KSP/GameData to use.
 
 Neptune Camera is distributed under an MIT License.
