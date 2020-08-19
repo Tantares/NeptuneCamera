@@ -169,8 +169,8 @@ namespace NeptuneCamera
             Actions["ActionCaptureGreenImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREEN_COLOUR);
             Events["EventCaptureGreenImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREEN_COLOUR);
 
-            Actions["ActionCaptureGreenImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREEN_COLOUR);
-            Events["EventCaptureGreenImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREEN_COLOUR);
+            Actions["ActionCaptureBlueImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_BLUE_COLOUR);
+            Events["EventCaptureBlueImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_BLUE_COLOUR);
 
             Actions["ActionCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
             Events["EventCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
