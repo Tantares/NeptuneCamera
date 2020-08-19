@@ -30,7 +30,13 @@ namespace NeptuneCamera
         public bool cameraHasErrors = true;
 
         [KSPField(isPersistant = true)]
-        public int cameraErrorRate = 5;
+        public int cameraErrorRate = 1;
+
+        [KSPField(isPersistant = true)]
+        public bool cameraHasNoise = true;
+
+        [KSPField(isPersistant = true)]
+        public int cameraNoiseMaxStrength = 10;
 
         private GameObject _cameraGameObject = null;
         private GameObject _nearGameObject = null;
@@ -56,6 +62,8 @@ namespace NeptuneCamera
         const string CAMERA_TYPE_GREEN_COLOUR = "GREEN_COLOUR";
         const string CAMERA_TYPE_BLUE_COLOUR = "BLUE_COLOUR";
         const string CAMERA_TYPE_GREYSCALE = "GREYSCALE_COLOUR";
+        const string CAMERA_TYPE_ULTRAVIOLET = "ULTRAVIOLET_COLOUR";
+        const string CAMERA_TYPE_INFRARED = "INFRARED_COLOUR";
 
         RenderTexture _renderTextureColor;
         RenderTexture _renderTextureDepth;
@@ -166,6 +174,12 @@ namespace NeptuneCamera
 
             Actions["ActionCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
             Events["EventCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
+
+            Actions["ActionCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
+            Events["EventCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
+
+            Actions["ActionCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
+            Events["EventCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
         }
 
         public void Update()
@@ -244,6 +258,31 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_GREYSCALE);
         }
 
+
+        [KSPAction(guiName = "Capture Ultraviolet Image", activeEditor = true)]
+        public void ActionCaptureUltravioletImage(KSPActionParam param)
+        {
+            CaptureImage(CAMERA_TYPE_ULTRAVIOLET);
+        }
+
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Ultraviolet Image", active = true)]
+        public void EventCaptureUltravioletImage()
+        {
+            CaptureImage(CAMERA_TYPE_ULTRAVIOLET);
+        }
+
+        [KSPAction(guiName = "Capture Infrared Image", activeEditor = true)]
+        public void ActionCaptureInfraredImage(KSPActionParam param)
+        {
+            CaptureImage(CAMERA_TYPE_INFRARED);
+        }
+
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Infrared Image", active = true)]
+        public void EventCaptureInfraredImage()
+        {
+            CaptureImage(CAMERA_TYPE_INFRARED);
+        }
+
         public void CaptureImage(string captureType)
         {
             try
@@ -295,6 +334,17 @@ namespace NeptuneCamera
 
                 if (captureType == CAMERA_TYPE_GREYSCALE)
                     imageTexture = ModuleNeptuneCameraEffects.GetGreyscaleTexture(imageTexture);
+
+                if (captureType == CAMERA_TYPE_ULTRAVIOLET)
+                    imageTexture = ModuleNeptuneCameraEffects.GetProtanopiaTexture(imageTexture);
+
+                if (captureType == CAMERA_TYPE_INFRARED)
+                    imageTexture = ModuleNeptuneCameraEffects.GetTritanopiaTexture(imageTexture);
+
+                // Apply noise if enabled.
+
+                if (cameraHasNoise)
+                    imageTexture = ModuleNeptuneCameraEffects.GetNoisyTexture(imageTexture, cameraNoiseMaxStrength);
 
                 // Apply error scrambling if enabled.
 

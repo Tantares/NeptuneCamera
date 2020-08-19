@@ -1,0 +1,6 @@
+Neptune Camera
+Version 1.0
+
+Initial release, place the NeptuneCamera folder into KSP/GameData to use.
+
+Neptune Camera is distributed under an MIT License.
