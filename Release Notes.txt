@@ -1,10 +1,11 @@
 Neptune Camera
-Version 2.1
+Version 2.2
 
 - Ultraviolet camera mode (protanopia).
 - Infrared camera mode (tritanopia).
 - configurable camera grain.
 - New error noise.
+- Fix for Linux
 
 place the NeptuneCamera folder into KSP/GameData to use.
 

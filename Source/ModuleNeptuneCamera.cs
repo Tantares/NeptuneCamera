@@ -52,7 +52,7 @@ namespace NeptuneCamera
         const string CAMERA_PREFIX = "Tantares_";
         const string GALAXY_CAMERA_NAME = "GalaxyCamera";
         const string SCALED_CAMERA_NAME = "Camera ScaledSpace";
-        const string FAR_CAMERA_NAME = "UIMainCamera";//"Camera 01";
+        const string FAR_CAMERA_NAME = "Camera 01";//"UIMainCamera";
         const string NEAR_CAMERA_NAME = "Camera 00";
 
         const string DEBUG_LOG_PREFIX = "ModuleTantaresCamera";
