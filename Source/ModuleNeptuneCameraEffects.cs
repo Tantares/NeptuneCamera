@@ -128,7 +128,7 @@ namespace NeptuneCamera
             {
                 for (int x = 0; x < inputTexture.width; x++)
                 {
-                    int randomErrorChance = randomNumberGenerator.Next(100);
+                    int randomErrorChance = randomNumberGenerator.Next(1000);
 
                     if (randomErrorChance <= errorRate)
                     {

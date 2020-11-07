@@ -14,29 +14,45 @@ namespace NeptuneCamera
         [KSPField]
         public string cameraTransformName = "cameraTransform";
 
-        [KSPField]
+        [KSPField(isPersistant = false)]
         public string cameraType = CAMERA_TYPE_FULL_COLOUR;
 
-        [KSPField(isPersistant = true)]
-        public float cameraFieldOfView = 60;
-
         [KSPField]
+        public bool cameraHasCustomFieldOfView = false;
+
+        [KSPField(isPersistant = true)]
+        public float cameraFieldOfView = 70;
+
+        [KSPField(isPersistant  = false)]
         public int cameraHorizontalResolution = 256;
 
-        [KSPField]
+        [KSPField(isPersistant = false)]
         public int cameraVerticalResolution = 256;
 
         [KSPField]
-        public bool cameraHasErrors = true;
+        public bool cameraHasErrors = false;
 
         [KSPField]
-        public int cameraErrorRate = 1;
+        public int cameraErrorRate = 0;
 
         [KSPField]
-        public bool cameraHasNoise = true;
+        public bool cameraHasNoise = false;
 
         [KSPField]
-        public int cameraNoiseMaxStrength = 10;
+        public int cameraNoiseMaxStrength = 0;
+
+        [KSPField]
+        public bool cameraHasCustomNearClipPlane = false;
+
+        [KSPField]
+        public float cameraCustomNearClipPlane = 0.01f;
+
+        [KSPField]
+        public bool cameraHasCustomTitle = false;
+
+        [KSPField]
+        public string cameraCustomTitle = "Camera";
+
 
         private GameObject _cameraGameObject = null;
         private GameObject _nearGameObject = null;
@@ -67,6 +83,9 @@ namespace NeptuneCamera
 
         RenderTexture _renderTextureColor;
         RenderTexture _renderTextureDepth;
+
+        const string PART_INFO_TEMPLATE 
+            = @"Camera Type: {0}\nHorizontal Resolution: {1}\nVertical Resolution: {2}\nField of View: {3}";
 
         public void Start()
         {
@@ -107,6 +126,12 @@ namespace NeptuneCamera
                 _nearCamera.transform.parent = _cameraGameObject.transform;
                 _nearCamera.transform.localPosition = Vector3.zero;
                 _nearCamera.transform.localRotation = Quaternion.identity;
+
+                if (cameraHasCustomNearClipPlane)
+                    _nearCamera.nearClipPlane = cameraCustomNearClipPlane;
+
+                if (cameraHasCustomFieldOfView)
+                    _nearCamera.fieldOfView = cameraFieldOfView;
             }
 
             // Add the far camera.
@@ -124,6 +149,9 @@ namespace NeptuneCamera
                 _farCamera.transform.parent = _cameraGameObject.transform;
                 _farCamera.transform.localPosition = Vector3.zero;
                 _farCamera.transform.localRotation = Quaternion.identity;
+
+                if (cameraHasCustomFieldOfView)
+                    _farCamera.fieldOfView = cameraFieldOfView;
             }
 
             // Add the scaled camera.
@@ -137,6 +165,9 @@ namespace NeptuneCamera
                 _scaledCamera.enabled = false;
 
                 // Scaled cam has no parent.
+
+                if (cameraHasCustomFieldOfView)
+                    _scaledCamera.fieldOfView = cameraFieldOfView;
             }
 
             // Add the galaxy camera.
@@ -180,6 +211,51 @@ namespace NeptuneCamera
 
             Actions["ActionCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
             Events["EventCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
+
+
+            // Rename the events if using a custom title.
+
+            if (cameraHasCustomTitle)
+            {
+                string descFullColour = $"({cameraCustomTitle}) Full Colour Image";
+                string descRed = $"({cameraCustomTitle}) Red Image";
+                string descGreen = $"({cameraCustomTitle}) Green Image";
+                string descBlue = $"({cameraCustomTitle}) Blue Image";
+                string descGreyscale = $"({cameraCustomTitle}) Greyscale Image";
+                string descUltraviolet = $"({cameraCustomTitle}) Ultraviolet Image";
+                string descInfrared = $"({cameraCustomTitle}) Infrared Image";
+
+                Actions["ActionCaptureFullColourImage"].guiName = descFullColour;
+                Events["EventCaptureFullColourImage"].guiName = descFullColour;
+
+                Actions["ActionCaptureRedImage"].guiName = descRed;
+                Events["EventCaptureRedImage"].guiName = descRed;
+
+                Actions["ActionCaptureGreenImage"].guiName = descGreen;
+                Events["EventCaptureGreenImage"].guiName = descGreen;
+
+                Actions["ActionCaptureBlueImage"].guiName = descBlue;
+                Events["EventCaptureBlueImage"].guiName = descBlue;
+
+                Actions["ActionCaptureGreyscaleImage"].guiName = descGreyscale;
+                Events["EventCaptureGreyscaleImage"].guiName = descGreyscale;
+
+                Actions["ActionCaptureUltravioletImage"].guiName = descUltraviolet;
+                Events["EventCaptureUltravioletImage"].guiName = descUltraviolet;
+
+                Actions["ActionCaptureInfraredImage"].guiName = descInfrared;
+                Events["EventCaptureInfraredImage"].guiName = descInfrared;
+            }
+        }
+
+        public string GetModuleTitle()
+        {
+            return "Neptune Camera";
+        }
+
+        public override string GetInfo()
+        {
+            return string.Format(PART_INFO_TEMPLATE,cameraType,cameraHorizontalResolution,cameraVerticalResolution,cameraFieldOfView);
         }
 
         public void Update()
@@ -297,6 +373,15 @@ namespace NeptuneCamera
                 _scaledCamera.enabled = true;
                 _galaxyCamera.enabled = true;
 
+                // Switch the camera FOV.
+
+                    //_nearCamera.fieldOfView = cameraFieldOfView;
+                    //if (_farCamera != null)
+                    //    _farCamera.fieldOfView = cameraFieldOfView;
+                    //_scaledCamera.fieldOfView = cameraFieldOfView;
+                    //_galaxyCamera.fieldOfView = cameraFieldOfView;
+                    //_galaxyCamera.cullingMask = 18;
+
                 // Render camera to texture.
 
                 Debug.LogFormat("[{0}] Rendering cameras to texture.", DEBUG_LOG_PREFIX);
@@ -377,10 +462,22 @@ namespace NeptuneCamera
                 _galaxyCamera.enabled = false;
 
                 // Write the file.
+                // neptune_0000_00_00_00_00_00_000_ABCDEFGH
 
-                string path = KSPUtil.ApplicationRootPath + "Screenshots/neptune-image-{0}.png";
+                string path = KSPUtil.ApplicationRootPath + "Screenshots/neptune_{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}.png";
 
-                string fileName = string.Format(path,Guid.NewGuid().ToString());
+                string fileName = string.Format
+                (
+                    path,
+                    DateTime.Now.Year,
+                    DateTime.Now.Month,
+                    DateTime.Now.Day,
+                    DateTime.Now.Hour,
+                    DateTime.Now.Minute,
+                    DateTime.Now.Second,
+                    DateTime.Now.Millisecond,
+                    Guid.NewGuid().ToString().Substring(0,8)
+                );
 
                 File.WriteAllBytes(fileName, bytes);
             }
