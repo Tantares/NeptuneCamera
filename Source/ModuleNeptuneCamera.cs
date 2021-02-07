@@ -20,8 +20,14 @@ namespace NeptuneCamera
         [KSPField]
         public bool cameraHasCustomFieldOfView = false;
 
-        [KSPField(isPersistant = true)]
-        public float cameraFieldOfView = 70;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Field of View", groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 1f)]
+        public float cameraFieldOfView = 70f;
+
+        [KSPField]
+        public float cameraFieldOfViewMax = 0f;
+
+        [KSPField]
+        public float cameraFieldOfViewMin = 0f;
 
         [KSPField(isPersistant  = false)]
         public int cameraHorizontalResolution = 256;
@@ -53,7 +59,6 @@ namespace NeptuneCamera
         [KSPField]
         public string cameraCustomTitle = "Camera";
 
-
         private GameObject _cameraGameObject = null;
         private GameObject _nearGameObject = null;
         private GameObject _farGameObject = null;
@@ -72,6 +77,9 @@ namespace NeptuneCamera
         const string NEAR_CAMERA_NAME = "Camera 00";
 
         const string DEBUG_LOG_PREFIX = "ModuleTantaresCamera";
+
+        const string GROUP_CODE = "NEPTUNECAMERA";
+        const string GROUP_NAME = "Neptune Camera";
 
         const string CAMERA_TYPE_FULL_COLOUR = "FULL_COLOUR";
         const string CAMERA_TYPE_RED_COLOUR = "RED_COLOUR";
@@ -205,7 +213,7 @@ namespace NeptuneCamera
 
             Actions["ActionCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
             Events["EventCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
-
+ 
             Actions["ActionCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
             Events["EventCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
 
@@ -246,6 +254,22 @@ namespace NeptuneCamera
                 Actions["ActionCaptureInfraredImage"].guiName = descInfrared;
                 Events["EventCaptureInfraredImage"].guiName = descInfrared;
             }
+
+            // Setup the slider.
+
+            if (cameraFieldOfViewMin == 0f)
+                cameraFieldOfViewMin = cameraFieldOfView;
+
+            if (cameraFieldOfViewMax == 0f)
+                cameraFieldOfViewMax = cameraFieldOfView;
+
+            UI_FloatRange cameraFieldOfViewEditorSlider = (UI_FloatRange)Fields["cameraFieldOfView"].uiControlEditor;
+            cameraFieldOfViewEditorSlider.minValue = cameraFieldOfViewMin;
+            cameraFieldOfViewEditorSlider.maxValue = cameraFieldOfViewMax;
+
+            UI_FloatRange cameraFieldOfViewFlightSlider = (UI_FloatRange)Fields["cameraFieldOfView"].uiControlFlight;
+            cameraFieldOfViewFlightSlider.minValue = cameraFieldOfViewMin;
+            cameraFieldOfViewFlightSlider.maxValue = cameraFieldOfViewMax;
         }
 
         public string GetModuleTitle()
@@ -280,7 +304,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_FULL_COLOUR);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Full Colour Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Full Colour Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureFullColourImage()
         {
             CaptureImage(CAMERA_TYPE_FULL_COLOUR);
@@ -292,7 +316,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_RED_COLOUR);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Red Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Red Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureRedImage()
         {
             CaptureImage(CAMERA_TYPE_RED_COLOUR);
@@ -304,7 +328,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_GREEN_COLOUR);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Green Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Green Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureGreenImage()
         {
             CaptureImage(CAMERA_TYPE_GREEN_COLOUR);
@@ -316,7 +340,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_BLUE_COLOUR);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Blue Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Blue Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureBlueImage()
         {
             CaptureImage(CAMERA_TYPE_BLUE_COLOUR);
@@ -328,7 +352,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_GREYSCALE);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Greyscale Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Greyscale Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureGreyscaleImage()
         {
             CaptureImage(CAMERA_TYPE_GREYSCALE);
@@ -341,7 +365,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_ULTRAVIOLET);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Ultraviolet Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Ultraviolet Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureUltravioletImage()
         {
             CaptureImage(CAMERA_TYPE_ULTRAVIOLET);
@@ -353,7 +377,7 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_INFRARED);
         }
 
-        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Infrared Image", active = true)]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Capture Infrared Image", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
         public void EventCaptureInfraredImage()
         {
             CaptureImage(CAMERA_TYPE_INFRARED);
@@ -361,6 +385,7 @@ namespace NeptuneCamera
 
         public void CaptureImage(string captureType)
         {
+            
             try
             {
                 // Switch the camera on.
@@ -375,13 +400,14 @@ namespace NeptuneCamera
 
                 // Switch the camera FOV.
 
-                    //_nearCamera.fieldOfView = cameraFieldOfView;
-                    //if (_farCamera != null)
-                    //    _farCamera.fieldOfView = cameraFieldOfView;
-                    //_scaledCamera.fieldOfView = cameraFieldOfView;
-                    //_galaxyCamera.fieldOfView = cameraFieldOfView;
-                    //_galaxyCamera.cullingMask = 18;
-
+                if (cameraHasCustomFieldOfView)
+                {
+                    _nearCamera.fieldOfView = cameraFieldOfView;
+                    if (_farCamera != null)
+                        _farCamera.fieldOfView = cameraFieldOfView;
+                    _scaledCamera.fieldOfView = cameraFieldOfView;
+                }
+                
                 // Render camera to texture.
 
                 Debug.LogFormat("[{0}] Rendering cameras to texture.", DEBUG_LOG_PREFIX);

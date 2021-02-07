@@ -1,9 +1,8 @@
 Neptune Camera
-Version 2.5.2
+Version 3.0
 
-- Support for custom names for multiple cameras on a single part.
-- Fix for custom field of view.
-- Hotfix.
+- Neptune camera PAW window elements now sit in a collapsable group.
+- Cameras can have a vraiable FOV controlled via slider.
 
 place the NeptuneCamera folder into KSP/GameData to use.
 
