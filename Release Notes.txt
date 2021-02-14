@@ -1,8 +1,7 @@
 Neptune Camera
-Version 3.0
+Version 4.0
 
-- Neptune camera PAW window elements now sit in a collapsable group.
-- Cameras can have a vraiable FOV controlled via slider.
+- Cameras can now have a toggle-able live preview.
 
 place the NeptuneCamera folder into KSP/GameData to use.
 

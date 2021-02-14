@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 using System.IO;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 namespace NeptuneCamera
 {
@@ -29,7 +30,7 @@ namespace NeptuneCamera
         [KSPField]
         public float cameraFieldOfViewMin = 0f;
 
-        [KSPField(isPersistant  = false)]
+        [KSPField(isPersistant = false)]
         public int cameraHorizontalResolution = 256;
 
         [KSPField(isPersistant = false)]
@@ -58,6 +59,9 @@ namespace NeptuneCamera
 
         [KSPField]
         public string cameraCustomTitle = "Camera";
+
+        [KSPField]
+        public bool cameraHasDisplayWindow = true;
 
         private GameObject _cameraGameObject = null;
         private GameObject _nearGameObject = null;
@@ -92,8 +96,22 @@ namespace NeptuneCamera
         RenderTexture _renderTextureColor;
         RenderTexture _renderTextureDepth;
 
-        const string PART_INFO_TEMPLATE 
+        const string PART_INFO_TEMPLATE
             = @"Camera Type: {0}\nHorizontal Resolution: {1}\nVertical Resolution: {2}\nField of View: {3}";
+
+        // GUI
+
+        private bool _isDisplayWindowVisible = false;
+
+        const int DISPLAY_TEXTURE_WIDTH = 128;
+        const int DISPLAY_TEXTURE_HEIGHT = 128;
+
+        RenderTexture _displayTextureColor;
+        RenderTexture _displayTextureDepth;
+
+        Rect _displayWindowRect = new Rect(Screen.width / 2, Screen.height / 2, 148, 178);
+        Rect _displayWindowLabelRect = new Rect(10, 20, 128, 20);
+        Rect _displayWindowTextureRect = new Rect(10, 40, 128, 128);
 
         public void Start()
         {
@@ -105,12 +123,19 @@ namespace NeptuneCamera
                 return;
             }
 
-            // Create the render texture.
+            // Create the camera render texture.
 
             _renderTextureColor = new RenderTexture(cameraHorizontalResolution, cameraVerticalResolution, 0);
             _renderTextureDepth = new RenderTexture(cameraHorizontalResolution, cameraVerticalResolution, 24);
             _renderTextureColor.Create();
             _renderTextureDepth.Create();
+
+            // Create the GUI render texture.
+
+            _displayTextureColor = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 0);
+            _displayTextureDepth = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 24);
+            _displayTextureColor.Create();
+            _displayTextureDepth.Create();
 
             // Setup all the cameras.
 
@@ -201,7 +226,7 @@ namespace NeptuneCamera
 
             Actions["ActionCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR);
             Events["EventCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR);
-            
+
             Actions["ActionCaptureRedImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_RED_COLOUR);
             Events["EventCaptureRedImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_RED_COLOUR);
 
@@ -213,12 +238,15 @@ namespace NeptuneCamera
 
             Actions["ActionCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
             Events["EventCaptureGreyscaleImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_GREYSCALE);
- 
+
             Actions["ActionCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
             Events["EventCaptureUltravioletImage"].active = (cameraType == CAMERA_TYPE_ULTRAVIOLET);
 
             Actions["ActionCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
             Events["EventCaptureInfraredImage"].active = (cameraType == CAMERA_TYPE_INFRARED);
+
+            Actions["ActionToggleDisplayWindow"].active = cameraHasDisplayWindow;
+            Events["EventToggleDisplayWindow"].active = cameraHasDisplayWindow;
 
 
             // Rename the events if using a custom title.
@@ -232,6 +260,7 @@ namespace NeptuneCamera
                 string descGreyscale = $"({cameraCustomTitle}) Greyscale Image";
                 string descUltraviolet = $"({cameraCustomTitle}) Ultraviolet Image";
                 string descInfrared = $"({cameraCustomTitle}) Infrared Image";
+                string descDisplayWindow = $"({cameraCustomTitle}) Toggle Display Widnow";
 
                 Actions["ActionCaptureFullColourImage"].guiName = descFullColour;
                 Events["EventCaptureFullColourImage"].guiName = descFullColour;
@@ -253,6 +282,9 @@ namespace NeptuneCamera
 
                 Actions["ActionCaptureInfraredImage"].guiName = descInfrared;
                 Events["EventCaptureInfraredImage"].guiName = descInfrared;
+
+                Actions["ActionToggleDisplayWindow"].guiName = descDisplayWindow;
+                Events["EventToggleDisplayWindow"].guiName = descDisplayWindow;
             }
 
             // Setup the slider.
@@ -279,7 +311,7 @@ namespace NeptuneCamera
 
         public override string GetInfo()
         {
-            return string.Format(PART_INFO_TEMPLATE,cameraType,cameraHorizontalResolution,cameraVerticalResolution,cameraFieldOfView);
+            return string.Format(PART_INFO_TEMPLATE, cameraType, cameraHorizontalResolution, cameraVerticalResolution, cameraFieldOfView);
         }
 
         public void Update()
@@ -288,6 +320,9 @@ namespace NeptuneCamera
             _scaledCamera.transform.rotation = _cameraGameObject.transform.rotation;
 
             _galaxyGameObject.transform.rotation = _cameraGameObject.transform.rotation;
+
+            if (_isDisplayWindowVisible)
+                CaptureDisplayWindowImage();
         }
 
         public void LateUpdate()
@@ -358,7 +393,6 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_GREYSCALE);
         }
 
-
         [KSPAction(guiName = "Capture Ultraviolet Image", activeEditor = true)]
         public void ActionCaptureUltravioletImage(KSPActionParam param)
         {
@@ -383,9 +417,22 @@ namespace NeptuneCamera
             CaptureImage(CAMERA_TYPE_INFRARED);
         }
 
+        [KSPAction(guiName = "Toggle Display Window", activeEditor = false)]
+        public void ActionToggleDisplayWindow(KSPActionParam param)
+        {
+            _isDisplayWindowVisible = !_isDisplayWindowVisible;
+        }
+
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Toggle Display Window", active = true, groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true)]
+        public void EventToggleDisplayWindow()
+        {
+            _isDisplayWindowVisible = !_isDisplayWindowVisible;
+        }
+
+
         public void CaptureImage(string captureType)
         {
-            
+
             try
             {
                 // Switch the camera on.
@@ -407,7 +454,7 @@ namespace NeptuneCamera
                         _farCamera.fieldOfView = cameraFieldOfView;
                     _scaledCamera.fieldOfView = cameraFieldOfView;
                 }
-                
+
                 // Render camera to texture.
 
                 Debug.LogFormat("[{0}] Rendering cameras to texture.", DEBUG_LOG_PREFIX);
@@ -462,7 +509,7 @@ namespace NeptuneCamera
                 if (cameraHasNoise)
                     imageTexture = ModuleNeptuneCameraEffects.GetNoisyTexture(imageTexture, cameraNoiseMaxStrength);
 
-               
+
                 Debug.LogFormat("[{0}] Encoding image texture to bytes.", DEBUG_LOG_PREFIX);
 
                 byte[] bytes = imageTexture.EncodeToPNG();
@@ -502,7 +549,7 @@ namespace NeptuneCamera
                     DateTime.Now.Minute,
                     DateTime.Now.Second,
                     DateTime.Now.Millisecond,
-                    Guid.NewGuid().ToString().Substring(0,8)
+                    Guid.NewGuid().ToString().Substring(0, 8)
                 );
 
                 File.WriteAllBytes(fileName, bytes);
@@ -512,6 +559,66 @@ namespace NeptuneCamera
                 Debug.LogFormat("[{0}] Error capturing image.", DEBUG_LOG_PREFIX);
                 Debug.LogFormat("[{0}] {1}.", DEBUG_LOG_PREFIX, ex.Message);
             }
+        }
+
+        public void CaptureDisplayWindowImage()
+        {
+            // Switch the camera on.
+
+            _nearCamera.enabled = true;
+            if (GameSettings.GraphicsVersion != GameSettings.GraphicsType.D3D11)
+                _farCamera.enabled = true;
+            _scaledCamera.enabled = true;
+            _galaxyCamera.enabled = true;
+
+            // Switch the camera FOV.
+
+            if (cameraHasCustomFieldOfView)
+            {
+                _nearCamera.fieldOfView = cameraFieldOfView;
+                if (_farCamera != null)
+                    _farCamera.fieldOfView = cameraFieldOfView;
+                _scaledCamera.fieldOfView = cameraFieldOfView;
+            }
+
+            // Render camera to texture.
+
+            RenderTexture.active = _displayTextureColor;
+
+            _nearCamera.SetTargetBuffers(_displayTextureColor.colorBuffer, _displayTextureDepth.depthBuffer);
+            _farCamera.SetTargetBuffers(_displayTextureColor.colorBuffer, _displayTextureDepth.depthBuffer);
+            _scaledCamera.SetTargetBuffers(_displayTextureColor.colorBuffer, _displayTextureDepth.depthBuffer);
+            _galaxyCamera.SetTargetBuffers(_displayTextureColor.colorBuffer, _displayTextureDepth.depthBuffer);
+
+            _galaxyCamera.Render();
+            _scaledCamera.Render();
+            if (GameSettings.GraphicsVersion != GameSettings.GraphicsType.D3D11)
+                _farCamera.Render();
+            _nearCamera.Render();
+
+            // Switch the camera off.
+
+            _nearCamera.enabled = false;
+            if (GameSettings.GraphicsVersion != GameSettings.GraphicsType.D3D11)
+                _farCamera.enabled = false;
+            _scaledCamera.enabled = false;
+            _galaxyCamera.enabled = false;
+        }
+
+
+        public void OnGUI()
+        {
+            if (!_isDisplayWindowVisible)
+                return;
+
+            _displayWindowRect = GUI.Window(1, _displayWindowRect, DisplayWindow, "Neptune Camera", HighLogic.Skin.window);
+        }
+
+        public void DisplayWindow(int windowID)
+        {
+            GUI.DrawTexture(_displayWindowTextureRect, _displayTextureColor, ScaleMode.ScaleToFit);
+            GUI.Label(_displayWindowLabelRect, cameraCustomTitle);
+            GUI.DragWindow();
         }
     }
 }
