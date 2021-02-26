@@ -132,7 +132,7 @@ namespace NeptuneCamera
 
             // Create the GUI render texture.
 
-            _displayTextureColor = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 0);
+            _displayTextureColor = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 0, RenderTextureFormat.RGB565);
             _displayTextureDepth = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 24);
             _displayTextureColor.Create();
             _displayTextureDepth.Create();
