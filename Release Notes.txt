@@ -1,9 +1,12 @@
 Neptune Camera
-Version 4.1
+Version 4.2
 
-- Cameras can now have a toggle-able live preview.
-- Fix for new terrain system.
+- Included a small example camera part.
+- Cameras can now have their camera transform specified in config.
+- Cameras can now be full-colour-only (no separate RGB modes).
 
 place the NeptuneCamera folder into KSP/GameData to use.
+Only a basic sample camera is included in the mod.
+Several other mods (for example TantaresSP, Bluedog Design Bureau) include many more camera parts.
 
 All Rights Reserved

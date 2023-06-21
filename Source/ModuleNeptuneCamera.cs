@@ -1,12 +1,7 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using System;
 using System.IO;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
+using System.Linq;
+using UnityEngine;
 
 namespace NeptuneCamera
 {
@@ -63,6 +58,15 @@ namespace NeptuneCamera
         [KSPField]
         public bool cameraHasDisplayWindow = true;
 
+        [KSPField]
+        public bool cameraHasConfigTransform = false;
+
+        [KSPField]
+        public Vector3 cameraConfigTransformPosition = Vector3.zero;
+
+        [KSPField]
+        public Vector3 cameraConfigTransformDirection = Vector3.zero;
+
         private GameObject _cameraGameObject = null;
         private GameObject _nearGameObject = null;
         private GameObject _farGameObject = null;
@@ -85,6 +89,7 @@ namespace NeptuneCamera
         const string GROUP_CODE = "NEPTUNECAMERA";
         const string GROUP_NAME = "Neptune Camera";
 
+        const string CAMERA_TYPE_FULL_COLOUR_ONLY = "FULL_COLOUR_ONLY";
         const string CAMERA_TYPE_FULL_COLOUR = "FULL_COLOUR";
         const string CAMERA_TYPE_RED_COLOUR = "RED_COLOUR";
         const string CAMERA_TYPE_GREEN_COLOUR = "GREEN_COLOUR";
@@ -119,8 +124,20 @@ namespace NeptuneCamera
 
             if (_cameraGameObject == null)
             {
-                Debug.LogFormat("[{0}] Camera game object is missing.", DEBUG_LOG_PREFIX);
-                return;
+                // Apply config transform if specified.
+
+                if (cameraHasConfigTransform)
+                {
+                    _cameraGameObject = new GameObject(cameraTransformName);
+                    _cameraGameObject.transform.SetParent(base.transform,false);
+                    _cameraGameObject.transform.localPosition = cameraConfigTransformPosition;
+                    _cameraGameObject.transform.localRotation = Quaternion.Euler(cameraConfigTransformDirection);
+                }
+                else
+                {
+                    Debug.LogFormat("[{0}] Camera game object is missing.", DEBUG_LOG_PREFIX);
+                    return;
+                }
             }
 
             // Create the camera render texture.
@@ -224,8 +241,8 @@ namespace NeptuneCamera
 
             // Configure which events are available.
 
-            Actions["ActionCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR);
-            Events["EventCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR);
+            Actions["ActionCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_FULL_COLOUR_ONLY);
+            Events["EventCaptureFullColourImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_FULL_COLOUR_ONLY);
 
             Actions["ActionCaptureRedImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_RED_COLOUR);
             Events["EventCaptureRedImage"].active = (cameraType == CAMERA_TYPE_FULL_COLOUR || cameraType == CAMERA_TYPE_RED_COLOUR);

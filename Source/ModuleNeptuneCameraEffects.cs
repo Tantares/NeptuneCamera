@@ -169,14 +169,14 @@ namespace NeptuneCamera
                     int darkenOrLightenChance = randomNumberGenerator.Next(100);
 
                     float noiseMultiplier = noiseStrength / 100f;
-                    
+
                     var pixel = inputTexture.GetPixel(x, y);
                     pixel = Color.Lerp(pixel, (darkenOrLightenChance % 2 == 0) ? Color.black : Color.white, noiseMultiplier);
 
                     inputTexture.SetPixel(x, y, pixel);
                 }
             }
-            
+
             return inputTexture;
         }
     }
