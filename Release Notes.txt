@@ -1,6 +1,7 @@
 Neptune Camera
-Version 4.2
+Version 4.3
 
+- Fixed for deferred rendering.
 - Included a small example camera part.
 - Cameras can now have their camera transform specified in config.
 - Cameras can now be full-colour-only (no separate RGB modes).

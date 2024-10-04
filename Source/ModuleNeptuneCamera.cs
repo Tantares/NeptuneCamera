@@ -170,6 +170,7 @@ namespace NeptuneCamera
                 _nearCamera.CopyFrom(nearCameraReference);
                 _nearCamera.name = CAMERA_PREFIX + NEAR_CAMERA_NAME;
                 _nearCamera.enabled = false;
+                _nearCamera.renderingPath = RenderingPath.Forward;
 
                 // The camera is attached to our object transform and does not move from there.
 
@@ -193,7 +194,7 @@ namespace NeptuneCamera
                 _farCamera.CopyFrom(farCameraReference);
                 _farCamera.name = CAMERA_PREFIX + FAR_CAMERA_NAME;
                 _farCamera.enabled = false;
-                _farCamera.Render = RenderingPath.Forward;
+                _farCamera.renderingPath = RenderingPath.Forward;
 
                 // The camera is attached to our object transform and does not move from there.
 
