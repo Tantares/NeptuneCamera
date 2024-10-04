@@ -193,6 +193,7 @@ namespace NeptuneCamera
                 _farCamera.CopyFrom(farCameraReference);
                 _farCamera.name = CAMERA_PREFIX + FAR_CAMERA_NAME;
                 _farCamera.enabled = false;
+                _farCamera.Render = RenderingPath.Forward;
 
                 // The camera is attached to our object transform and does not move from there.
 
@@ -213,6 +214,7 @@ namespace NeptuneCamera
                 _scaledCamera.CopyFrom(scaledCameraReference);
                 _scaledCamera.name = CAMERA_PREFIX + SCALED_CAMERA_NAME;
                 _scaledCamera.enabled = false;
+                _scaledCamera.renderingPath = RenderingPath.Forward;
 
                 // Scaled cam has no parent.
 
@@ -229,6 +231,7 @@ namespace NeptuneCamera
                 _galaxyCamera.CopyFrom(galaxyCameraReference);
                 _galaxyCamera.name = CAMERA_PREFIX + GALAXY_CAMERA_NAME;
                 _galaxyCamera.enabled = false;
+                _galaxyCamera.renderingPath = RenderingPath.Forward;
 
                 // Galaxy camera renders the galaxy skybox and is not 
                 // actually moving, but only rotating to look at the galaxy cube.
