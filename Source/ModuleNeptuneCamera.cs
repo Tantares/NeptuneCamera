@@ -5,6 +5,45 @@ using UnityEngine;
 
 namespace NeptuneCamera
 {
+    internal class CullClass : MonoBehaviour
+    {
+        internal static System.Collections.Generic.List<GameObject> aObj;
+
+        private void SetVisible(GameObject obj, bool visible)
+        {
+            foreach(Renderer r in obj.GetComponentsInChildren<Renderer>())
+                r.enabled = visible;
+        }
+
+        internal void OnPreCull()
+        {
+            if(aObj == null)
+                return;
+
+            for(int i = 0; i < aObj.Count; i++)
+            {
+                if(aObj[i] == null)
+                    aObj.RemoveAt(i--);
+                else
+                    SetVisible(aObj[i], false);
+            }
+        }
+
+        internal void OnPostRender()
+        {
+            if(aObj == null)
+                return;
+
+            for(int i = 0; i < aObj.Count; i++)
+            {
+                if(aObj[i] == null)
+                    aObj.RemoveAt(i--);
+                else
+                    SetVisible(aObj[i], true);
+            }
+        }
+    };
+
     public class ModuleNeptuneCamera : PartModule
     {
         [KSPField]
@@ -106,20 +145,22 @@ namespace NeptuneCamera
 
         // GUI
 
-        private bool _isDisplayWindowVisible = false;
+        private static int globalWindowId = 1;
+        private int wndId;
 
-        const int DISPLAY_TEXTURE_WIDTH = 128;
-        const int DISPLAY_TEXTURE_HEIGHT = 128;
+        private bool _isDisplayWindowVisible = false;
 
         RenderTexture _displayTextureColor;
         RenderTexture _displayTextureDepth;
 
-        Rect _displayWindowRect = new Rect(Screen.width / 2, Screen.height / 2, 148, 178);
-        Rect _displayWindowLabelRect = new Rect(10, 20, 128, 20);
-        Rect _displayWindowTextureRect = new Rect(10, 40, 128, 128);
+        Rect _displayWindowRect;
+        Rect _displayWindowLabelRect;
+        Rect _displayWindowTextureRect;
 
         public void Start()
         {
+            wndId = globalWindowId++;
+
             _cameraGameObject = base.gameObject.GetChild(cameraTransformName);
 
             if (_cameraGameObject == null)
@@ -147,13 +188,6 @@ namespace NeptuneCamera
             _renderTextureColor.Create();
             _renderTextureDepth.Create();
 
-            // Create the GUI render texture.
-
-            _displayTextureColor = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 0, RenderTextureFormat.RGB565);
-            _displayTextureDepth = new RenderTexture(DISPLAY_TEXTURE_WIDTH, DISPLAY_TEXTURE_HEIGHT, 24);
-            _displayTextureColor.Create();
-            _displayTextureDepth.Create();
-
             // Setup all the cameras.
 
             _nearGameObject = new GameObject();
@@ -164,6 +198,7 @@ namespace NeptuneCamera
             // Add the near camera.
 
             _nearCamera = _nearGameObject.AddComponent<Camera>();
+            _nearGameObject.AddComponent<CullClass>();
             var nearCameraReference = UnityEngine.Camera.allCameras.FirstOrDefault(cam => cam.name == NEAR_CAMERA_NAME);
             if (nearCameraReference != null)
             {
@@ -188,6 +223,7 @@ namespace NeptuneCamera
             // Add the far camera.
 
             _farCamera = _farGameObject.AddComponent<Camera>();
+            _farGameObject.AddComponent<CullClass>();
             var farCameraReference = UnityEngine.Camera.allCameras.FirstOrDefault(cam => cam.name == FAR_CAMERA_NAME);
             if (farCameraReference != null)
             {
@@ -209,6 +245,7 @@ namespace NeptuneCamera
             // Add the scaled camera.
 
             _scaledCamera = _scaledGameObject.AddComponent<Camera>();
+            _scaledGameObject.AddComponent<CullClass>();
             var scaledCameraReference = UnityEngine.Camera.allCameras.FirstOrDefault(cam => cam.name == SCALED_CAMERA_NAME);
             if (scaledCameraReference != null)
             {
@@ -226,6 +263,7 @@ namespace NeptuneCamera
             // Add the galaxy camera.
 
             _galaxyCamera = _galaxyGameObject.AddComponent<Camera>();
+            _galaxyGameObject.AddComponent<CullClass>();
             var galaxyCameraReference = UnityEngine.Camera.allCameras.FirstOrDefault(cam => cam.name == GALAXY_CAMERA_NAME);
             if (galaxyCameraReference != null)
             {
@@ -269,6 +307,10 @@ namespace NeptuneCamera
             Actions["ActionToggleDisplayWindow"].active = cameraHasDisplayWindow;
             Events["EventToggleDisplayWindow"].active = cameraHasDisplayWindow;
 
+
+            Fields["WindowSize"].OnValueModified += onChanged_WindowSize;
+
+            onChanged_WindowSize(null);
 
             // Rename the events if using a custom title.
 
@@ -352,6 +394,26 @@ namespace NeptuneCamera
             _farCamera.enabled = false;
             _scaledCamera.enabled = false;
             _galaxyCamera.enabled = false;
+        }
+
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = false, guiName = "Window Size", guiFormat = "0", groupName = GROUP_CODE, groupDisplayName = GROUP_NAME, groupStartCollapsed = true),
+            UI_FloatRange(minValue = 128f, maxValue = 512f, stepIncrement = 32f, suppressEditorShipModified = true, scene = UI_Scene.Flight)]
+        public float WindowSize = 256f;
+
+        private void onChanged_WindowSize(object o)
+        {
+            int iWindowSize = (int)WindowSize;
+
+            _displayWindowRect = new Rect(_displayWindowRect.x, _displayWindowRect.y, 20 + WindowSize, 50 + WindowSize);
+            _displayWindowLabelRect = new Rect(10, 20, WindowSize, 20);
+            _displayWindowTextureRect = new Rect(10, 40, WindowSize, WindowSize);
+
+            // Create the GUI render texture.
+
+            _displayTextureColor = new RenderTexture(iWindowSize, iWindowSize, 0, RenderTextureFormat.RGB565);
+            _displayTextureDepth = new RenderTexture(iWindowSize, iWindowSize, 24);
+            _displayTextureColor.Create();
+            _displayTextureDepth.Create();
         }
 
         [KSPAction(guiName = "Capture Full Colour Image", activeEditor = true)]
@@ -626,20 +688,33 @@ namespace NeptuneCamera
             _galaxyCamera.enabled = false;
         }
 
-
         public void OnGUI()
         {
             if (!_isDisplayWindowVisible)
                 return;
 
-            _displayWindowRect = GUI.Window(1, _displayWindowRect, DisplayWindow, "Neptune Camera", HighLogic.Skin.window);
+            _displayWindowRect = GUI.Window(wndId, _displayWindowRect, DisplayWindow, "Neptune Camera", HighLogic.Skin.window);
         }
 
         public void DisplayWindow(int windowID)
         {
+            if(wndId != windowID)
+                return;
+
             GUI.DrawTexture(_displayWindowTextureRect, _displayTextureColor, ScaleMode.ScaleToFit);
             GUI.Label(_displayWindowLabelRect, cameraCustomTitle);
             GUI.DragWindow();
+        }
+
+        public static void SetPartProcessing(GameObject obj, bool hidden)
+        {
+            if(CullClass.aObj == null)
+                CullClass.aObj = new System.Collections.Generic.List<GameObject>();
+
+            if(hidden)
+                CullClass.aObj.Add(obj);
+            else
+                CullClass.aObj.Remove(obj);
         }
     }
 }
